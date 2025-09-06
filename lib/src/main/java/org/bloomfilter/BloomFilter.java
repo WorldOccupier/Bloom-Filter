@@ -1,5 +1,7 @@
 package org.bloomfilter;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * A Bloom filter is a space-efficient probabilistic data structure used to test 
  * whether an element is a member of a set. False positive matches are possible, 
@@ -25,16 +27,18 @@ package org.bloomfilter;
  */
 public class BloomFilter<T extends BloomFilterValue> {
     private static final int DEFAULT_SIZE = 10000;
-    private final boolean[] filterArray;
+    private final AtomicBoolean[] filterArray;
 
     public BloomFilter(int size)
     {
-        filterArray = new boolean[size];
+        filterArray = new AtomicBoolean[size];
+        initializeFilterArray(size);
     }
 
     public BloomFilter()
     {
-        filterArray = new boolean[DEFAULT_SIZE];
+        filterArray = new AtomicBoolean[DEFAULT_SIZE];
+        initializeFilterArray(DEFAULT_SIZE);
     }
 
     /**
@@ -53,7 +57,7 @@ public class BloomFilter<T extends BloomFilterValue> {
     {
         if (bloomFilterValue.getFilterValue() >= 0 && bloomFilterValue.getFilterValue() < filterArray.length)
         {
-            return !filterArray[bloomFilterValue.getFilterValue()];
+            return !filterArray[bloomFilterValue.getFilterValue()].get();
         }
 
         return false;
@@ -73,7 +77,7 @@ public class BloomFilter<T extends BloomFilterValue> {
     {
         if (bloomFilterValue.getFilterValue() >= 0 && bloomFilterValue.getFilterValue() < filterArray.length)
         {
-            filterArray[bloomFilterValue.getFilterValue()] = true;
+            filterArray[bloomFilterValue.getFilterValue()].set(true);
             return;
         }
 
@@ -95,7 +99,7 @@ public class BloomFilter<T extends BloomFilterValue> {
     {
         if (index >= 0 && index < filterArray.length)
         {
-            filterArray[index] = false;
+            filterArray[index].set(false);
             return;
         }
 
@@ -114,14 +118,21 @@ public class BloomFilter<T extends BloomFilterValue> {
     public int valuesCount()
     {
         int count = 0;
-        for (boolean present: filterArray)
+        for (AtomicBoolean present: filterArray)
         {
-            if (present)
+            if (present.get())
             {
                 count += 1;
             }
         }
 
         return count;
+    }
+
+    private void initializeFilterArray(int size)
+    {
+        for (int i = 0; i < size; i++) {
+            filterArray[i] = new AtomicBoolean(false);
+        }
     }
 }
