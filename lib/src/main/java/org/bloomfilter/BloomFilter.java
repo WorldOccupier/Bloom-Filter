@@ -49,7 +49,7 @@ public class BloomFilter<T extends BloomFilterValue> {
      * @return {@code true} if the element is definitely not in the filter;
      *         {@code false} if it may be present
      */
-    public boolean isAbsent(T bloomFilterValue)
+    public boolean isAbsent(BloomFilterValue bloomFilterValue)
     {
         if (bloomFilterValue.getFilterValue() >= 0 && bloomFilterValue.getFilterValue() < filterArray.length)
         {
@@ -69,7 +69,7 @@ public class BloomFilter<T extends BloomFilterValue> {
      *
      * @param bloomFilterValue the element to add to the filter
      */
-    public void add(T bloomFilterValue)
+    public void add(BloomFilterValue bloomFilterValue)
     {
         if (bloomFilterValue.getFilterValue() >= 0 && bloomFilterValue.getFilterValue() < filterArray.length)
         {
@@ -78,5 +78,50 @@ public class BloomFilter<T extends BloomFilterValue> {
         }
 
         throw new RuntimeException("Invalid index value");
+    }
+
+    /**
+     * Removes an element from the Bloom filter by clearing the bit
+     * at the specified index.
+     * <p>
+     * Note that standard Bloom filters do not support removal of elements
+     * without introducing false negatives. This method directly clears
+     * a bit and should be used with caution.
+     *
+     * @param index the index of the bit to clear
+     * @throws RuntimeException if the index is out of bounds
+     */
+    public void remove(int index)
+    {
+        if (index >= 0 && index < filterArray.length)
+        {
+            filterArray[index] = false;
+            return;
+        }
+
+        throw new RuntimeException("Invalid index value");
+    }
+
+    /**
+     * Returns the total number of bits currently set in the Bloom filter.
+     * <p>
+     * This provides a simple way to estimate how many elements have been
+     * added (though due to possible hash collisions, this may slightly
+     * overestimate the actual number of distinct elements).
+     *
+     * @return the count of bits set to {@code true} in the filter array
+     */
+    public int valuesCount()
+    {
+        int count = 0;
+        for (boolean present: filterArray)
+        {
+            if (present)
+            {
+                count += 1;
+            }
+        }
+
+        return count;
     }
 }
